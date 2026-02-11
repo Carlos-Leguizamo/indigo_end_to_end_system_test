@@ -14,6 +14,18 @@ namespace Infrastructure.Repositories
         {
             _context.Sales.Add(sale);
             await _context.SaveChangesAsync();
+            
+            await _context.Entry(sale)
+                .Collection(s => s.Items)
+                .LoadAsync();
+            
+            foreach (var item in sale.Items)
+            {
+                await _context.Entry(item)
+                    .Reference(i => i.Product)
+                    .LoadAsync();
+            }
+            
             return sale;
         }
 

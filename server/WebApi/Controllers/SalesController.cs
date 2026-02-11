@@ -24,7 +24,8 @@ namespace WebApi.Controllers
            var sale = new Sale
             {
                 Date = DateTime.UtcNow,
-                ClientId = dto.ClientId, 
+                ClientId = dto.ClientId,
+                SaleStatusId = 1,
                 Items = dto.Items.Select(i => new SaleDetail
                 {
                     ProductId = i.ProductId,

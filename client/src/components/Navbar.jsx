@@ -6,7 +6,7 @@ export default function Navbar() {
     <AppBar position="static">
       <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Sistemas de Gestion - Indigo Prueba Tecnica
+          Sistemas de Productos y Ventas - Indigo Prueba Tecnica
         </Typography>
       </Toolbar>
     </AppBar>
