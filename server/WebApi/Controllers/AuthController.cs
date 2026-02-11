@@ -58,7 +58,7 @@ namespace WebApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var user = await _service.GetByUsernameAsync(dto.Username);
+            var user = await _service.GetByEmailAsync(dto.Email);
 
             if (user == null || 
                 !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
