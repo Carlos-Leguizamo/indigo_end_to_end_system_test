@@ -41,38 +41,35 @@ namespace WebApi.Controllers
         }
 
         [HttpPost("login")]
-public async Task<IActionResult> Login([FromBody] User login)
-{
-    var user = await _service.GetByUsernameAsync(login.Username);
-    if (user == null || !BCrypt.Net.BCrypt.Verify(login.PasswordHash, user.PasswordHash))
-        return Unauthorized("Usuario o contraseña incorrecta");
+        public async Task<IActionResult> Login([FromBody] User login)
+        {
+            var user = await _service.GetByUsernameAsync(login.Username);
+            if (user == null || !BCrypt.Net.BCrypt.Verify(login.PasswordHash, user.PasswordHash))
+                return Unauthorized("Usuario o contraseña incorrecta");
 
-    var jwtSecret = _config["JwtSettings:SecretKey"];
+            var jwtSecret = _config["JWT_KEY"]; 
 
-    if (string.IsNullOrWhiteSpace(jwtSecret))
-        throw new Exception("JWT Secret no configurado");
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+                throw new Exception("JWT Secret no configurado");
 
-    Console.WriteLine($"JWT length: {jwtSecret.Length}");
-
-    var key = Encoding.UTF8.GetBytes(jwtSecret);
-
-    var tokenHandler = new JwtSecurityTokenHandler();
-    var tokenDescriptor = new SecurityTokenDescriptor
-    {
-        Subject = new ClaimsIdentity(new[] {
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role)
-        }),
-        Expires = DateTime.UtcNow.AddHours(8),
-        SigningCredentials = new SigningCredentials(
-            new SymmetricSecurityKey(key),
-            SecurityAlgorithms.HmacSha256
-        )
-    };
-
-    var token = tokenHandler.CreateToken(tokenDescriptor);
-    return Ok(new { Token = tokenHandler.WriteToken(token) });
-}
-
+            var key = Encoding.UTF8.GetBytes(jwtSecret);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[] {
+                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Role, user.Role)
+                }),
+                Expires = DateTime.UtcNow.AddHours(8),
+                Issuer = _config["JWT_ISSUER"],
+                Audience = _config["JWT_AUDIENCE"],
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256
+                )
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return Ok(new { Token = tokenHandler.WriteToken(token) });
+        }
     }
 }

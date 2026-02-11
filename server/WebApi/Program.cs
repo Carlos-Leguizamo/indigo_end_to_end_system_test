@@ -1,4 +1,6 @@
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
@@ -8,15 +10,12 @@ using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//C argar el env
-DotNetEnv.Env.Load();
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+DotNetEnv.Env.Load(envPath);
 
-// Mapear variables de entorno a Configuration
 builder.Configuration.AddEnvironmentVariables();
 
-// Leer conexión (desde .env)
 var connectionString = builder.Configuration["POSTGRES_CONNECTION"];
-
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -31,6 +30,27 @@ builder.Services.AddScoped<ClientService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<SaleService>();
 
+var jwtKey = builder.Configuration["JWT_KEY"] ?? throw new InvalidOperationException("JWT_KEY no configurado");
+var jwtIssuer = builder.Configuration["JWT_ISSUER"] ?? "IndigoApp";
+var jwtAudience = builder.Configuration["JWT_AUDIENCE"] ?? "IndigoUsers";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -42,5 +62,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();  
+app.UseAuthorization();   
+
 app.MapControllers();
 app.Run();
