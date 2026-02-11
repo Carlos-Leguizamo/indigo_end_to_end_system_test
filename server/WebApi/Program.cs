@@ -51,6 +51,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowClient", builder =>
+    {
+        builder.WithOrigins("http://localhost:5173")
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -62,6 +72,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowClient");
 
 app.UseAuthentication();  
 app.UseAuthorization();   

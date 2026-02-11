@@ -24,6 +24,10 @@ namespace WebApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
+            {
+                return BadRequest("Username, email y password son requeridos");
+            }
             var existingUser = await _service
                 .GetByUsernameOrEmailAsync(dto.Username, dto.Email);
 
@@ -58,6 +62,10 @@ namespace WebApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
+            {
+                return BadRequest("Email y password son requeridos");
+            }
             var user = await _service.GetByEmailAsync(dto.Email);
 
             if (user == null || 
