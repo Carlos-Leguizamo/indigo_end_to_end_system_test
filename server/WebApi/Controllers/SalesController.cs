@@ -63,19 +63,22 @@ namespace WebApi.Controllers
             };
 
             var created = await _service.AddSaleAsync(sale);
+            
+            var fullSale = await _service.GetSaleByIdAsync(created.Id);
+            
             var response = new SaleResponseDto
             {
-                Id = created.Id,
-                Date = created.Date,
-                Total = created.Total,
+                Id = fullSale.Id,
+                Date = fullSale.Date,
+                Total = fullSale.Total,
                 Client = new ClientResponseDto
                 {
-                    Id = created.Client.Id,
-                    Name = created.Client.Name,
-                    Email = created.Client.Email,
-                    Phone = created.Client.Phone
+                    Id = fullSale.Client.Id,
+                    Name = fullSale.Client.Name,
+                    Email = fullSale.Client.Email,
+                    Phone = fullSale.Client.Phone
                 },
-                Items = created.Items.Select(i => new SaleItemResponseDto
+                Items = fullSale.Items.Select(i => new SaleItemResponseDto
                 {
                     ProductId = i.ProductId,
                     ProductName = i.Product.Name,
@@ -84,8 +87,8 @@ namespace WebApi.Controllers
                 }).ToList()
             };
 
-            return CreatedAtAction(nameof(GetSalesByDateRange), 
-                new { from = created.Date, to = created.Date }, response);
+            return CreatedAtAction(nameof(GetById), 
+                new { id = fullSale.Id }, response);
         }
 
         [HttpGet("report")]
@@ -164,19 +167,22 @@ namespace WebApi.Controllers
             }).ToList();
 
             var updated = await _service.UpdateSaleAsync(sale);
+            
+            var fullSale = await _service.GetSaleByIdAsync(updated.Id);
+            
             var response = new SaleResponseDto
             {
-                Id = updated.Id,
-                Date = updated.Date,
-                Total = updated.Total,
+                Id = fullSale.Id,
+                Date = fullSale.Date,
+                Total = fullSale.Total,
                 Client = new ClientResponseDto
                 {
-                    Id = updated.Client.Id,
-                    Name = updated.Client.Name,
-                    Email = updated.Client.Email,
-                    Phone = updated.Client.Phone
+                    Id = fullSale.Client.Id,
+                    Name = fullSale.Client.Name,
+                    Email = fullSale.Client.Email,
+                    Phone = fullSale.Client.Phone
                 },
-                Items = updated.Items.Select(i => new SaleItemResponseDto
+                Items = fullSale.Items.Select(i => new SaleItemResponseDto
                 {
                     ProductId = i.ProductId,
                     ProductName = i.Product.Name,

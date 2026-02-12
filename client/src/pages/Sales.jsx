@@ -36,6 +36,7 @@ import {
 } from "../api/sales";
 import { getAllProducts } from "../api/products";
 import { getClients } from "../api/clients";
+import toast from "react-hot-toast";
 
 const SALE_STATUS = {
   1: "Pendiente",
@@ -72,7 +73,6 @@ export default function Sales() {
 
   useEffect(() => {
     if (user && user?.token) {
-      console.log("Usuario autenticado, cargando datos...");
       loadClients();
       loadProducts();
     } else {
@@ -91,13 +91,9 @@ const loadSales = async () => {
   try {
     setLoading(true);
     setError("");
-    console.log("Obteniendo ventas...");
-    
     const fromDateTime = `${fromDate}T00:00:00Z`;
     const toDateTime = `${toDate}T23:59:59Z`;
-    
     const data = await getSales(fromDateTime, toDateTime, user?.token);
-    console.log("Ventas cargadas:", data);
     setSales(data || []);
   } catch (err) {
     console.error("Error completo al cargar ventas:", err);
@@ -112,12 +108,9 @@ const loadSales = async () => {
 
   const loadProducts = async () => {
     try {
-      console.log("Obteniendo productos...");
       const data = await getAllProducts(user?.token);
-      console.log("Productos cargados:", data);
       setProducts(data || []);
     } catch (err) {
-      console.error("Error completo al cargar productos:", err);
       setError(
         "Error al cargar productos: " +
           (err.response?.data?.message || err.message),
@@ -127,9 +120,7 @@ const loadSales = async () => {
 
   const loadClients = async () => {
     try {
-      console.log("Obteniendo clientes...");
       const data = await getClients(user?.token);
-      console.log("Clientes cargados:", data);
       setClients(data || []);
     } catch (err) {
       console.error("Error completo al cargar clientes:", err);
@@ -233,11 +224,11 @@ const loadSales = async () => {
 
       if (selectedSale) {
         await updateSale(selectedSale.id, formData, user?.token);
-        setSuccess("Venta actualizada correctamente");
+        toast.success("Venta actualizada correctamente");
         setOpenEdit(false);
       } else {
         await createSale(formData, user?.token);
-        setSuccess("Venta creada correctamente");
+        toast.success("Venta creada correctamente");
         setOpenCreate(false);
       }
 
@@ -265,11 +256,6 @@ const loadSales = async () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getClientName = (clientId) => {
-    const client = clients.find((c) => c.id === clientId);
-    return client ? client.name : "Desconocido";
   };
 
   const getProductName = (productId) => {
@@ -332,7 +318,7 @@ const loadSales = async () => {
             {sales.map((sale) => (
               <TableRow key={sale.id}>
                 <TableCell>{sale.id}</TableCell>
-                <TableCell>{getClientName(sale.clientId)}</TableCell>
+                <TableCell>{(sale.client.name)}</TableCell>
                 <TableCell align="right">${sale.total.toFixed(2)}</TableCell>
                 <TableCell>{SALE_STATUS[sale.saleStatusId] || "N/A"}</TableCell>
                 <TableCell>
@@ -505,7 +491,7 @@ const loadSales = async () => {
                   ID: {selectedSale.id}
                 </Typography>
                 <Typography variant="subtitle2">
-                  Cliente: {getClientName(selectedSale.clientId)}
+                  Cliente: {(selectedSale.clientId)}
                 </Typography>
                 <Typography variant="subtitle2">
                   Estado: {SALE_STATUS[selectedSale.saleStatusId] || "N/A"}
