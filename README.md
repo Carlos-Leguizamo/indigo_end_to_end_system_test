@@ -87,7 +87,7 @@ El módulo de ventas permite:
 
 ## Requisitos del Sistema
 
-- .NET 8 SDK
+- .NET 10 SDK
 - Node.js v22 o superior
 - PostgreSQL
 
