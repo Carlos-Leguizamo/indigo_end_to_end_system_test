@@ -518,7 +518,11 @@ export default function Products() {
           />
           {formData.imageUrl && (
             <Box sx={{ mt: 2, textAlign: "center" }}>
-              <Typography variant="caption" color="text.secondary" gutterBottom>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", mb: 1.5 }}
+              >
                 Vista previa:
               </Typography>
 
