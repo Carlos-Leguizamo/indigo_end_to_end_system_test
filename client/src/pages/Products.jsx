@@ -186,13 +186,13 @@ export default function Products() {
   return (
     <DashboardLayout>
       <Box sx={{ mb: 4 }}>
-        <Typography 
-          variant="h4" 
-          gutterBottom 
-          sx={{ 
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{
             fontWeight: 600,
-            color: 'primary.main',
-            mb: 1
+            color: "primary.main",
+            mb: 1,
           }}
         >
           Gestión de Productos
@@ -204,13 +204,20 @@ export default function Products() {
 
       <Card sx={{ mb: 3, borderRadius: 2, boxShadow: 3 }}>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <Box>
               <Typography variant="h6" fontWeight={600} gutterBottom>
                 Catálogo de Productos
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {products.length} producto{products.length !== 1 ? 's' : ''} registrado{products.length !== 1 ? 's' : ''}
+                {products.length} producto{products.length !== 1 ? "s" : ""}{" "}
+                registrado{products.length !== 1 ? "s" : ""}
               </Typography>
             </Box>
             <Button
@@ -218,11 +225,11 @@ export default function Products() {
               color="primary"
               onClick={handleOpenCreate}
               startIcon={<Add />}
-              sx={{ 
-                textTransform: 'none',
+              sx={{
+                textTransform: "none",
                 fontWeight: 600,
                 px: 3,
-                py: 1
+                py: 1,
               }}
             >
               Nuevo Producto
@@ -240,53 +247,92 @@ export default function Products() {
           </CardContent>
         </Card>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
+        <TableContainer
+          component={Paper}
+          sx={{ borderRadius: 2, boxShadow: 3 }}
+        >
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: "primary.main" }}>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>ID</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>Producto</TableCell>
-                <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>Precio</TableCell>
-                <TableCell align="center" sx={{ color: "white", fontWeight: 600 }}>Stock</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>Categoría</TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>Imagen</TableCell>
-                <TableCell align="center" sx={{ color: "white", fontWeight: 600 }}>Acciones</TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                  ID
+                </TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                  Producto
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{ color: "white", fontWeight: 600 }}
+                >
+                  Precio
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ color: "white", fontWeight: 600 }}
+                >
+                  Stock
+                </TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                  Categoría
+                </TableCell>
+                <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                  Imagen
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ color: "white", fontWeight: 600 }}
+                >
+                  Acciones
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {products.length > 0 ? (
                 products.map((product, index) => (
-                  <TableRow 
+                  <TableRow
                     key={product.id}
-                    sx={{ 
-                      '&:hover': { 
-                        backgroundColor: 'action.hover',
-                        cursor: 'pointer'
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "action.hover",
+                        cursor: "pointer",
                       },
-                      backgroundColor: index % 2 === 0 ? 'background.paper' : 'action.hover'
+                      backgroundColor:
+                        index % 2 === 0 ? "background.paper" : "action.hover",
                     }}
                   >
-                    <TableCell sx={{ fontWeight: 600 }}>#{product.id}</TableCell>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      #{product.id}
+                    </TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight={500}>
                         {product.name}
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Typography variant="body2" fontWeight={600} color="success.main">
+                      <Typography
+                        variant="body2"
+                        fontWeight={600}
+                        color="success.main"
+                      >
                         ${product.price.toLocaleString()}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
-                      <Chip 
+                      <Chip
                         label={product.stock}
                         size="small"
-                        color={product.stock > 10 ? "success" : product.stock > 0 ? "warning" : "error"}
+                        color={
+                          product.stock > 10
+                            ? "success"
+                            : product.stock > 0
+                              ? "warning"
+                              : "error"
+                        }
                         sx={{ fontWeight: 600, minWidth: 50 }}
                       />
                     </TableCell>
                     <TableCell>
-                      <Chip 
+                      <Chip
                         label={product.category}
                         size="small"
                         variant="outlined"
@@ -304,8 +350,8 @@ export default function Products() {
                             height: 60,
                             objectFit: "cover",
                             borderRadius: 1,
-                            border: '2px solid',
-                            borderColor: 'divider'
+                            border: "2px solid",
+                            borderColor: "divider",
                           }}
                         />
                       ) : (
@@ -313,11 +359,11 @@ export default function Products() {
                           sx={{
                             width: 60,
                             height: 60,
-                            backgroundColor: 'grey.200',
+                            backgroundColor: "grey.200",
                             borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                         >
                           <Typography variant="caption" color="text.secondary">
@@ -327,14 +373,20 @@ export default function Products() {
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 0.5,
+                          justifyContent: "center",
+                        }}
+                      >
                         <IconButton
                           size="small"
                           onClick={() => handleOpenEdit(product)}
                           title="Editar"
-                          sx={{ 
-                            color: 'primary.main',
-                            '&:hover': { backgroundColor: 'primary.lighter' }
+                          sx={{
+                            color: "primary.main",
+                            "&:hover": { backgroundColor: "primary.lighter" },
                           }}
                         >
                           <Edit fontSize="small" />
@@ -344,9 +396,9 @@ export default function Products() {
                           onClick={() => handleDeleteProduct(product.id)}
                           title="Eliminar"
                           disabled={loading}
-                          sx={{ 
-                            color: 'error.main',
-                            '&:hover': { backgroundColor: 'error.lighter' }
+                          sx={{
+                            color: "error.main",
+                            "&:hover": { backgroundColor: "error.lighter" },
                           }}
                         >
                           <Delete fontSize="small" />
@@ -358,17 +410,25 @@ export default function Products() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                    <Typography
+                      variant="h6"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       No hay productos disponibles
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 3 }}
+                    >
                       Comienza creando tu primer producto
                     </Typography>
-                    <Button 
-                      variant="contained" 
-                      color="primary" 
+                    <Button
+                      variant="contained"
+                      color="primary"
                       onClick={handleOpenCreate}
-                      sx={{ textTransform: 'none', fontWeight: 600 }}
+                      sx={{ textTransform: "none", fontWeight: 600 }}
                     >
                       + Crear Primer Producto
                     </Button>
@@ -386,15 +446,17 @@ export default function Products() {
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: 3 }
+          sx: { borderRadius: 3 },
         }}
       >
-        <DialogTitle sx={{ 
-          pb: 1, 
-          backgroundColor: 'primary.main', 
-          color: 'white',
-          fontWeight: 600
-        }}>
+        <DialogTitle
+          sx={{
+            pb: 1,
+            backgroundColor: "primary.main",
+            color: "white",
+            fontWeight: 600,
+          }}
+        >
           {isEditing ? "Editar Producto" : "Nuevo Producto"}
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
@@ -408,7 +470,7 @@ export default function Products() {
             required
             placeholder="Ej: Laptop Gamer"
           />
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: "flex", gap: 2 }}>
             <TextField
               fullWidth
               label="Precio"
@@ -455,33 +517,35 @@ export default function Products() {
             helperText="Ingresa la URL de la imagen del producto"
           />
           {formData.imageUrl && (
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Box sx={{ mt: 2, textAlign: "center" }}>
               <Typography variant="caption" color="text.secondary" gutterBottom>
                 Vista previa:
               </Typography>
+
               <Box
                 component="img"
                 src={formData.imageUrl}
                 alt="Preview"
                 sx={{
-                  maxWidth: '100%',
+                  maxWidth: "100%",
                   maxHeight: 200,
                   borderRadius: 2,
-                  border: '2px solid',
-                  borderColor: 'divider',
-                  mt: 1
+                  border: "2px solid",
+                  borderColor: "divider",
+                  mt: 1,
                 }}
                 onError={(e) => {
-                  e.target.style.display = 'none';
+                  e.target.src =
+                    "https://via.placeholder.com/300x200?text=Imagen+No+Valida";
                 }}
               />
             </Box>
           )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button 
-            onClick={handleCloseDialog} 
-            sx={{ textTransform: 'none', fontWeight: 600 }}
+          <Button
+            onClick={handleCloseDialog}
+            sx={{ textTransform: "none", fontWeight: 600 }}
           >
             Cancelar
           </Button>
@@ -490,13 +554,17 @@ export default function Products() {
             variant="contained"
             color="primary"
             disabled={loading}
-            sx={{ 
-              textTransform: 'none', 
+            sx={{
+              textTransform: "none",
               fontWeight: 600,
-              px: 4
+              px: 4,
             }}
           >
-            {loading ? "Guardando..." : isEditing ? "Actualizar Producto" : "Crear Producto"}
+            {loading
+              ? "Guardando..."
+              : isEditing
+                ? "Actualizar Producto"
+                : "Crear Producto"}
           </Button>
         </DialogActions>
       </Dialog>
