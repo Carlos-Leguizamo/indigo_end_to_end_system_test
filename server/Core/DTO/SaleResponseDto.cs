@@ -3,6 +3,7 @@ public class SaleResponseDto
     public int Id { get; set; }
     public DateTime Date { get; set; }
     public decimal Total { get; set; }
+    public ClientResponseDto Client { get; set; } = new();
     public List<SaleItemResponseDto> Items { get; set; } = new();
 }
 

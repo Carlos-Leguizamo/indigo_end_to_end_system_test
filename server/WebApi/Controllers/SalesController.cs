@@ -28,6 +28,13 @@ namespace WebApi.Controllers
                 Id = s.Id,
                 Date = s.Date,
                 Total = s.Total,
+                Client = new ClientResponseDto
+                {
+                    Id = s.Client.Id,
+                    Name = s.Client.Name,
+                    Email = s.Client.Email,
+                    Phone = s.Client.Phone
+                },
                 Items = s.Items.Select(i => new SaleItemResponseDto
                 {
                     ProductId = i.ProductId,
@@ -43,7 +50,7 @@ namespace WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSaleDto dto)
         {
-           var sale = new Sale
+            var sale = new Sale
             {
                 Date = DateTime.UtcNow,
                 ClientId = dto.ClientId,
@@ -55,13 +62,19 @@ namespace WebApi.Controllers
                 }).ToList()
             };
 
-
             var created = await _service.AddSaleAsync(sale);
             var response = new SaleResponseDto
             {
                 Id = created.Id,
                 Date = created.Date,
                 Total = created.Total,
+                Client = new ClientResponseDto
+                {
+                    Id = created.Client.Id,
+                    Name = created.Client.Name,
+                    Email = created.Client.Email,
+                    Phone = created.Client.Phone
+                },
                 Items = created.Items.Select(i => new SaleItemResponseDto
                 {
                     ProductId = i.ProductId,
@@ -85,6 +98,13 @@ namespace WebApi.Controllers
                 Id = s.Id,
                 Date = s.Date,
                 Total = s.Total,
+                Client = new ClientResponseDto
+                {
+                    Id = s.Client.Id,
+                    Name = s.Client.Name,
+                    Email = s.Client.Email,
+                    Phone = s.Client.Phone
+                },
                 Items = s.Items.Select(i => new SaleItemResponseDto
                 {
                     ProductId = i.ProductId,
@@ -109,6 +129,13 @@ namespace WebApi.Controllers
                 Id = sale.Id,
                 Date = sale.Date,
                 Total = sale.Total,
+                Client = new ClientResponseDto
+                {
+                    Id = sale.Client.Id,
+                    Name = sale.Client.Name,
+                    Email = sale.Client.Email,
+                    Phone = sale.Client.Phone
+                },
                 Items = sale.Items.Select(i => new SaleItemResponseDto
                 {
                     ProductId = i.ProductId,
@@ -142,6 +169,13 @@ namespace WebApi.Controllers
                 Id = updated.Id,
                 Date = updated.Date,
                 Total = updated.Total,
+                Client = new ClientResponseDto
+                {
+                    Id = updated.Client.Id,
+                    Name = updated.Client.Name,
+                    Email = updated.Client.Email,
+                    Phone = updated.Client.Phone
+                },
                 Items = updated.Items.Select(i => new SaleItemResponseDto
                 {
                     ProductId = i.ProductId,
