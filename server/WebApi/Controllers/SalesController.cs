@@ -18,6 +18,28 @@ namespace WebApi.Controllers
             _service = service;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var sales = await _service.GetAllSalesAsync();
+
+            var response = sales.Select(s => new SaleResponseDto
+            {
+                Id = s.Id,
+                Date = s.Date,
+                Total = s.Total,
+                Items = s.Items.Select(i => new SaleItemResponseDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.Product.Name,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.Product.Price
+                }).ToList()
+            });
+
+            return Ok(response);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSaleDto dto)
         {

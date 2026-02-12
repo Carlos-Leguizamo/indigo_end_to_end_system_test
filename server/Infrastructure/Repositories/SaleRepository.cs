@@ -29,6 +29,15 @@ namespace Infrastructure.Repositories
             return sale;
         }
 
+        public async Task<IEnumerable<Sale>> GetAllAsync()
+        {
+            return await _context.Sales
+                .Include(s => s.Items)
+                    .ThenInclude(i => i.Product)
+                .Include(s => s.Client)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Sale>> GetByDateRangeAsync(DateTime from, DateTime to) =>
             await _context.Sales
                 .Include(s => s.Items)
@@ -52,16 +61,16 @@ namespace Infrastructure.Repositories
             return sale;
         }
 
-public async Task<bool> DeleteAsync(int id)
-{
-    var sale = await _context.Sales.FindAsync(id);
-    if (sale != null)
-    {
-        _context.Sales.Remove(sale);
-        await _context.SaveChangesAsync();
-        return true; // Se eliminó exitosamente
-    }
-    return false; // No se encontró la venta
-}
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var sale = await _context.Sales.FindAsync(id);
+            if (sale != null)
+            {
+                _context.Sales.Remove(sale);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            return false;
+        }
     }
 }

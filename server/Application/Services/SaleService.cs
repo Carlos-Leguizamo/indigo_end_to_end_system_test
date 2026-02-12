@@ -18,6 +18,12 @@ namespace Application.Services
             return await _repo.AddAsync(sale);
         }
 
+        public async Task<List<Sale>> GetAllSalesAsync()
+        {
+            var sales = await _repo.GetAllAsync();
+            return sales.ToList();
+        }
+
         public Task<IEnumerable<Sale>> GetSalesByDateRangeAsync(DateTime from, DateTime to)
         {
             return _repo.GetByDateRangeAsync(from, to);
