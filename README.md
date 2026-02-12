@@ -73,17 +73,6 @@ El sistema utiliza JSON Web Tokens (JWT) para:
 
 ---
 
-## Módulo de Ventas
-
-El módulo de ventas permite:
-
-- Asociar una venta a un cliente
-- Registrar múltiples productos por venta
-- Calcular automáticamente subtotales y total general
-- Consultar ventas por fechas
-- Visualizar historial de ventas
-
----
 
 ## Requisitos del Sistema
 
@@ -143,7 +132,7 @@ El módulo de ventas permite:
 
 - GET /api/sales/report?from=yyyy-mm-dd&to=yyyy-mm-dd
 
-## Instalación y Ejecución
+## Instalación y Ejecución Backend
 
 ### 1 Clonar el repositorio
 
@@ -356,7 +345,7 @@ Flujo:
 - ProtectedRoute valida acceso a rutas privadas.
 
 
-## Instalación y Ejecución
+## Instalación y Ejecución Fronted
 
 ### 1 Clonar el repositorio
 
