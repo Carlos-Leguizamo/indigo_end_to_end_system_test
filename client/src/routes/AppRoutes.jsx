@@ -6,7 +6,6 @@ import Dashboard from "../pages/Dashboard";
 import Sales from "../pages/Sales";
 import Clients from "../pages/Clients";
 import Products from "../pages/Products";
-import Reports from "../pages/Reports";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 export default function AppRoutes() {
@@ -44,14 +43,6 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute>
               <Products />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/reports"
-          element={
-            <ProtectedRoute>
-              <Reports />
             </ProtectedRoute>
           }
         />

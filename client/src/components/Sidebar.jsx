@@ -41,12 +41,10 @@ const navItems = [
     to: "/products",
     icon: <InventoryIcon />,
   },
-  { key: "sales", label: "Ventas", to: "/sales", icon: <ShoppingCartIcon /> },
-  {
-    key: "reports",
-    label: "Reportes",
-    to: "/reports",
-    icon: <ReceiptLongIcon />,
+  { key: "sales",
+    label: "Ventas", 
+    to: "/sales",
+    icon: <ShoppingCartIcon /> 
   },
 ];
 

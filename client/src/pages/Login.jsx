@@ -38,7 +38,7 @@ export default function Login() {
     try {
       const res = await loginUser(data);
       toast.success("¡Bienvenido!", { duration: 3500 });
-      login(res.token);
+      login(res);
       navigate("/dashboard", { replace: true });
     } catch (error) {
       if (error?.response?.status === 401) {
