@@ -9,6 +9,13 @@ export const getSales = async (from, to, token) => {
   return res.data;
 };
 
+export const getSalesAll = async (token) => {
+  const res = await axios.get(`${API_URL}/sales`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}
+
 export const createSale = async (saleData, token) => {
   const res = await axios.post(`${API_URL}/sales`, saleData, {
     headers: { Authorization: `Bearer ${token}` },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import DashboardLayout from "../layout/DashboardLayout";
+import ConfirmDialog from "../components/ConfirmDialog";
 import {
   Typography,
   Card,
@@ -24,11 +25,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Chip,
 } from "@mui/material";
 import { Delete, Edit, Visibility } from "@mui/icons-material";
 import { AuthContext } from "../context/AuthContext";
 import {
   getSales,
+  getSalesAll,
   getSaleById,
   createSale,
   updateSale,
@@ -38,11 +41,11 @@ import { getAllProducts } from "../api/products";
 import { getClients } from "../api/clients";
 import toast from "react-hot-toast";
 
-const SALE_STATUS = {
-  1: "Pendiente",
-  2: "Completada",
-  3: "Cancelada",
-};
+const SALE_STATUSES = [
+  { id: 1, name: "Pendiente", color: "warning" },
+  { id: 2, name: "Completada", color: "success" },
+  { id: 3, name: "Cancelada", color: "error" },
+];
 
 export default function Sales() {
   const { user } = useContext(AuthContext);
@@ -50,20 +53,14 @@ export default function Sales() {
   const [products, setProducts] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  const [fromDate, setFromDate] = useState(
-    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      .toISOString()
-      .split("T")[0],
-  );
-  const [toDate, setToDate] = useState(new Date().toISOString().split("T")[0]);
-
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
+  const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
+  const [saleToDelete, setSaleToDelete] = useState(null);
 
   const [formData, setFormData] = useState({
     clientId: 0,
@@ -82,39 +79,42 @@ export default function Sales() {
 
   useEffect(() => {
     if (user && user?.token) {
-      console.log("Cargando ventas desde", fromDate, "hasta", toDate);
-      loadSales();
+      loadSalesAll();
     }
-  }, [user, user?.token, fromDate, toDate]);
+  }, [user, user?.token]);
 
-const loadSales = async () => {
-  try {
-    setLoading(true);
-    setError("");
-    const fromDateTime = `${fromDate}T00:00:00Z`;
-    const toDateTime = `${toDate}T23:59:59Z`;
-    const data = await getSales(fromDateTime, toDateTime, user?.token);
-    setSales(data || []);
-  } catch (err) {
-    console.error("Error completo al cargar ventas:", err);
-    setError(
-      "Error al cargar ventas: " +
-        (err.response?.data?.message || err.message),
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  const loadSales = async () => {
+    try {
+      setLoading(true);
+      const fromDateTime = `${fromDate}T00:00:00Z`;
+      const toDateTime = `${toDate}T23:59:59Z`;
+      const data = await getSales(fromDateTime, toDateTime, user?.token);
+      setSales(data || []);
+    } catch (err) {
+      console.error("Error completo al cargar ventas:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSalesAll = async () => {
+    try {
+      setLoading(true);
+      const data = await getSalesAll(user?.token);
+      setSales(data || []);
+    } catch (err) {
+      console.error("Error completo al cargar todas las ventas:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadProducts = async () => {
     try {
       const data = await getAllProducts(user?.token);
       setProducts(data || []);
     } catch (err) {
-      setError(
-        "Error al cargar productos: " +
-          (err.response?.data?.message || err.message),
-      );
+      console.error("Error al cargar los productos", err);
     }
   };
 
@@ -124,11 +124,25 @@ const loadSales = async () => {
       setClients(data || []);
     } catch (err) {
       console.error("Error completo al cargar clientes:", err);
-      setError(
-        "Error al cargar clientes: " +
-          (err.response?.data?.message || err.message),
-      );
     }
+  };
+
+  const handleFilterByDate = () => {
+    if (!fromDate || !toDate) {
+      toast.error("Por favor selecciona ambas fechas");
+      return;
+    }
+    if (new Date(fromDate) > new Date(toDate)) {
+      toast.error("La fecha inicial no puede ser mayor a la fecha final");
+      return;
+    }
+    loadSales();
+  };
+
+  const handleClearFilter = () => {
+    setFromDate("");
+    setToDate("");
+    loadSalesAll();
   };
 
   const handleOpenCreate = () => {
@@ -158,7 +172,7 @@ const loadSales = async () => {
       });
       setOpenEdit(true);
     } catch (err) {
-      setError("Error al cargar venta: " + err.message);
+      console.error("Error al cargar venta para edición: " + err.message);
     }
   };
 
@@ -173,7 +187,7 @@ const loadSales = async () => {
       setSelectedSale(fullSale);
       setOpenDetail(true);
     } catch (err) {
-      setError("Error al cargar venta: " + err.message);
+      console.error("Error al cargar venta para detalles: " + err.message);
     }
   };
 
@@ -206,10 +220,14 @@ const loadSales = async () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      setError("");
 
       if (!formData.clientId || formData.clientId === 0) {
-        setError("Selecciona un cliente");
+        toast.error("Selecciona un cliente");
+        return;
+      }
+
+      if (!formData.saleStatusId || formData.saleStatusId === 0) {
+        toast.error("Selecciona un estado de venta");
         return;
       }
 
@@ -218,7 +236,7 @@ const loadSales = async () => {
           (item) => !item.productId || item.productId === 0 || !item.quantity,
         )
       ) {
-        setError("Completa todos los items");
+        toast.error("Completa todos los items");
         return;
       }
 
@@ -233,29 +251,47 @@ const loadSales = async () => {
       }
 
       setSelectedSale(null);
-      await loadSales();
+      if (fromDate && toDate) {
+        await loadSales();
+      } else {
+        await loadSalesAll();
+      }
     } catch (err) {
-      setError("Error al guardar venta: " + err.message);
+      console.error("Error al guardar venta: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar esta venta?"))
-      return;
+  const handleDelete = (id) => {
+    setSaleToDelete(id);
+    setOpenConfirmDelete(true);
+  };
 
+  const handleConfirmDelete = async () => {
     try {
       setLoading(true);
-      setError("");
-      await deleteSale(id, user?.token);
-      setSuccess("Venta eliminada correctamente");
-      await loadSales();
+      await deleteSale(saleToDelete, user?.token);
+      toast.success("Venta eliminada correctamente");
+      setOpenConfirmDelete(false);
+      setSaleToDelete(null);
+      if (fromDate && toDate) {
+        await loadSales();
+      } else {
+        await loadSalesAll();
+      }
     } catch (err) {
-      setError("Error al eliminar venta: " + err.message);
+      console.error("Error al eliminar venta: " + err.message);
+      setOpenConfirmDelete(false);
+      setSaleToDelete(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setOpenConfirmDelete(false);
+    setSaleToDelete(null);
   };
 
   const getProductName = (productId) => {
@@ -263,121 +299,296 @@ const loadSales = async () => {
     return product ? product.name : "Desconocido";
   };
 
+  const getStatusInfo = (statusId) => {
+    return SALE_STATUSES.find((s) => s.id === statusId) || SALE_STATUSES[0];
+  };
+
+  const calculateTotal = (items) => {
+    if (!items || items.length === 0) return 0;
+    return items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+  };
+
   return (
     <DashboardLayout>
-      <Typography variant="h4" gutterBottom>
-        Ventas
-      </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess("")}>
-          {success}
-        </Alert>
-      )}
-
-      <Box sx={{ mb: 3, display: "flex", gap: 2, alignItems: "center" }}>
-        <TextField
-          type="date"
-          label="Desde"
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          size="small"
-        />
-        <TextField
-          type="date"
-          label="Hasta"
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          size="small"
-        />
-        <Button variant="contained" color="primary" onClick={handleOpenCreate}>
-          + Nueva Venta
-        </Button>
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{
+            fontWeight: 600,
+            color: "primary.main",
+            mb: 1,
+          }}
+        >
+          Gestión de Ventas
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Administra y controla todas las ventas de tu negocio
+        </Typography>
       </Box>
 
-      <TableContainer component={Paper}>
+      <Card sx={{ mb: 3, borderRadius: 2, boxShadow: 3 }}>
+        <CardContent>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 2,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                alignItems: "center",
+                flex: 1,
+                flexWrap: "wrap",
+              }}
+            >
+              <TextField
+                type="date"
+                label="Desde"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                size="small"
+                sx={{ minWidth: 160 }}
+              />
+              <TextField
+                type="date"
+                label="Hasta"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                size="small"
+                sx={{ minWidth: 160 }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleFilterByDate}
+                disabled={!fromDate || !toDate}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 600,
+                  px: 3,
+                }}
+              >
+                Filtrar
+              </Button>
+              {(fromDate || toDate) && (
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={handleClearFilter}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 600,
+                  }}
+                >
+                  Limpiar
+                </Button>
+              )}
+            </Box>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleOpenCreate}
+              sx={{
+                textTransform: "none",
+                fontWeight: 600,
+                px: 3,
+                py: 1,
+              }}
+            >
+              Nueva Venta
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+
+      <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
         <Table>
-          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Cliente</TableCell>
-              <TableCell align="right">Total</TableCell>
-              <TableCell>Estado</TableCell>
-              <TableCell>Fecha</TableCell>
-              <TableCell align="center">Acciones</TableCell>
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "primary.main" }}>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>ID</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                Cliente
+              </TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                Estado
+              </TableCell>
+              <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>
+                Total
+              </TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                Fecha
+              </TableCell>
+              <TableCell
+                align="center"
+                sx={{ color: "white", fontWeight: 600 }}
+              >
+                Acciones
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sales.map((sale) => (
-              <TableRow key={sale.id}>
-                <TableCell>{sale.id}</TableCell>
-                <TableCell>{(sale.client.name)}</TableCell>
-                <TableCell align="right">${sale.total.toFixed(2)}</TableCell>
-                <TableCell>{SALE_STATUS[sale.saleStatusId] || "N/A"}</TableCell>
-                <TableCell>
-                  {new Date(sale.date).toLocaleDateString()}
-                </TableCell>
-                <TableCell align="center">
-                  <IconButton
-                    size="small"
-                    color="info"
-                    onClick={() => handleOpenDetail(sale)}
-                    title="Ver detalles"
-                  >
-                    <Visibility fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => handleOpenEdit(sale)}
-                    title="Editar"
-                  >
-                    <Edit fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => handleDelete(sale.id)}
-                    title="Eliminar"
-                  >
-                    <Delete fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+            {sales.map((sale, index) => {
+              const statusInfo = getStatusInfo(sale.saleStatusId);
+              return (
+                <TableRow
+                  key={sale.id}
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "action.hover",
+                      cursor: "pointer",
+                    },
+                    backgroundColor:
+                      index % 2 === 0 ? "background.paper" : "action.hover",
+                  }}
+                >
+                  <TableCell sx={{ fontWeight: 600 }}>#{sale.id}</TableCell>
+                  <TableCell>
+                    <Box>
+                      <Typography variant="body2" fontWeight={500}>
+                        {sale.client.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {sale.client.email}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={statusInfo.name}
+                      color={statusInfo.color}
+                      size="small"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography
+                      variant="body2"
+                      fontWeight={600}
+                      color="success.main"
+                    >
+                      ${calculateTotal(sale.items).toLocaleString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {new Date(sale.date).toLocaleDateString("es-ES", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        justifyContent: "center",
+                      }}
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenDetail(sale)}
+                        title="Ver detalles"
+                        sx={{
+                          color: "info.main",
+                          "&:hover": { backgroundColor: "info.lighter" },
+                        }}
+                      >
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleOpenEdit(sale)}
+                        title="Editar"
+                        sx={{
+                          color: "primary.main",
+                          "&:hover": { backgroundColor: "primary.lighter" },
+                        }}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(sale.id)}
+                        title="Eliminar"
+                        sx={{
+                          color: "error.main",
+                          "&:hover": { backgroundColor: "error.lighter" },
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
 
       {sales.length === 0 && !loading && (
-        <Card sx={{ mt: 2 }}>
+        <Card
+          sx={{
+            mt: 3,
+            borderRadius: 2,
+            boxShadow: 3,
+            textAlign: "center",
+            py: 6,
+          }}
+        >
           <CardContent>
-            <Typography color="textSecondary">
-              No hay ventas en este período.
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              No hay ventas registradas
             </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {fromDate && toDate
+                ? "No se encontraron ventas en el período seleccionado"
+                : "Comienza creando tu primera venta"}
+            </Typography>
+            {!fromDate && !toDate && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleOpenCreate}
+                sx={{ textTransform: "none", fontWeight: 600 }}
+              >
+                + Crear Primera Venta
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
 
-      {/* Dialog Crear/Editar */}
       <Dialog
         open={openCreate || openEdit}
         onClose={selectedSale ? handleCloseEdit : handleCloseCreate}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 },
+        }}
       >
-        <DialogTitle>
+        <DialogTitle
+          sx={{
+            pb: 1,
+            backgroundColor: "primary.main",
+            color: "white",
+            fontWeight: 600,
+          }}
+        >
           {selectedSale ? "Editar Venta" : "Nueva Venta"}
         </DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <FormControl fullWidth sx={{ mb: 2 }}>
+        <DialogContent sx={{ pt: 3 }}>
+          <FormControl fullWidth margin="normal">
             <InputLabel>Cliente</InputLabel>
             <Select
               value={formData.clientId}
@@ -395,29 +606,51 @@ const loadSales = async () => {
             </Select>
           </FormControl>
 
-          {selectedSale && (
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Estado</InputLabel>
-              <Select
-                value={formData.saleStatusId}
-                onChange={(e) =>
-                  setFormData({ ...formData, saleStatusId: e.target.value })
-                }
-                label="Estado"
-              >
-                <MenuItem value={1}>Pendiente</MenuItem>
-                <MenuItem value={2}>Completada</MenuItem>
-                <MenuItem value={3}>Cancelada</MenuItem>
-              </Select>
-            </FormControl>
-          )}
+          <FormControl fullWidth margin="normal">
+            <InputLabel>Estado de la Venta</InputLabel>
+            <Select
+              value={formData.saleStatusId}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  saleStatusId: Number(e.target.value),
+                })
+              }
+              label="Estado de la Venta"
+            >
+              {SALE_STATUSES.map((status) => (
+                <MenuItem key={status.id} value={status.id}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Chip
+                      label={status.name}
+                      color={status.color}
+                      size="small"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+          <Typography
+            variant="subtitle1"
+            sx={{ mt: 3, mb: 2, fontWeight: 600, color: "primary.main" }}
+          >
             Productos
           </Typography>
           {formData.items.map((item, index) => (
-            <Box key={index} sx={{ mb: 2, p: 1, backgroundColor: "#f9f9f9" }}>
-              <FormControl fullWidth sx={{ mb: 1 }}>
+            <Card
+              key={index}
+              sx={{
+                mb: 2,
+                p: 2,
+                backgroundColor: "#f8f9fa",
+                borderRadius: 2,
+                border: "1px solid #e0e0e0",
+              }}
+            >
+              <FormControl fullWidth margin="normal">
                 <InputLabel>Producto</InputLabel>
                 <Select
                   value={item.productId}
@@ -429,12 +662,14 @@ const loadSales = async () => {
                   <MenuItem value={0}>-- Selecciona un producto --</MenuItem>
                   {products.map((product) => (
                     <MenuItem key={product.id} value={product.id}>
-                      {product.name} (${product.price})
+                      {product.name} (${product.price.toLocaleString()})
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <Box sx={{ display: "flex", gap: 1 }}>
+              <Box
+                sx={{ display: "flex", gap: 2, alignItems: "center", mt: 2 }}
+              >
                 <TextField
                   type="number"
                   label="Cantidad"
@@ -447,83 +682,240 @@ const loadSales = async () => {
                   fullWidth
                 />
                 <Button
+                  variant="outlined"
                   color="error"
                   onClick={() => handleRemoveItem(index)}
                   disabled={formData.items.length === 1}
+                  sx={{
+                    textTransform: "none",
+                    minWidth: 100,
+                  }}
                 >
                   Quitar
                 </Button>
               </Box>
-            </Box>
+            </Card>
           ))}
           <Button
             variant="outlined"
             onClick={handleAddItem}
             fullWidth
-            sx={{ mb: 2 }}
+            sx={{
+              mb: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              py: 1.5,
+              borderStyle: "dashed",
+              borderWidth: 2,
+            }}
           >
             + Agregar Producto
           </Button>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={selectedSale ? handleCloseEdit : handleCloseCreate}>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={selectedSale ? handleCloseEdit : handleCloseCreate}
+            sx={{ textTransform: "none", fontWeight: 600 }}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleSave} variant="contained" disabled={loading}>
-            {loading ? "Guardando..." : "Guardar"}
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            disabled={loading}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              px: 4,
+            }}
+          >
+            {loading ? "Guardando..." : "Guardar Venta"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Dialog Detalles */}
       <Dialog
         open={openDetail}
         onClose={handleCloseDetail}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 },
+        }}
       >
-        <DialogTitle>Detalles de Venta</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
+        <DialogTitle
+          sx={{
+            pb: 1,
+            backgroundColor: "info.main",
+            color: "white",
+            fontWeight: 600,
+          }}
+        >
+          🧾 Detalles de Venta
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
           {selectedSale && (
             <Box>
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">
-                  ID: {selectedSale.id}
-                </Typography>
-                <Typography variant="subtitle2">
-                  Cliente: {(selectedSale.clientId)}
-                </Typography>
-                <Typography variant="subtitle2">
-                  Estado: {SALE_STATUS[selectedSale.saleStatusId] || "N/A"}
-                </Typography>
-                <Typography variant="subtitle2">
-                  Fecha: {new Date(selectedSale.date).toLocaleDateString()}
-                </Typography>
-              </Box>
+              <Card
+                sx={{
+                  mb: 3,
+                  p: 2,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: 2,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: 2,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={600}
+                    >
+                      ID DE VENTA
+                    </Typography>
+                    <Typography variant="h6" fontWeight={600}>
+                      #{selectedSale.id}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={600}
+                    >
+                      CLIENTE
+                    </Typography>
+                    <Typography variant="body1" fontWeight={500}>
+                      {selectedSale.client?.name ||
+                        `ID: ${selectedSale.clientId}`}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={600}
+                    >
+                      ESTADO
+                    </Typography>
+                    <Box sx={{ mt: 0.5 }}>
+                      <Chip
+                        label={getStatusInfo(selectedSale.saleStatusId).name}
+                        color={getStatusInfo(selectedSale.saleStatusId).color}
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </Box>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={600}
+                    >
+                      FECHA
+                    </Typography>
+                    <Typography variant="body1" fontWeight={500}>
+                      {new Date(selectedSale.date).toLocaleDateString("es-ES", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Card>
 
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Productos:
+              <Typography
+                variant="subtitle1"
+                sx={{ mb: 2, fontWeight: 600, color: "primary.main" }}
+              >
+                Productos
               </Typography>
-              <TableContainer component={Paper}>
+              <TableContainer
+                component={Paper}
+                sx={{
+                  borderRadius: 2,
+                  boxShadow: 2,
+                  mb: 3,
+                }}
+              >
                 <Table size="small">
                   <TableHead>
-                    <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                      <TableCell>Producto</TableCell>
-                      <TableCell align="right">Precio</TableCell>
-                      <TableCell align="right">Cantidad</TableCell>
-                      <TableCell align="right">Subtotal</TableCell>
+                    <TableRow sx={{ backgroundColor: "primary.main" }}>
+                      <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                        Producto
+                      </TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{ color: "white", fontWeight: 600 }}
+                      >
+                        Precio Unit.
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{ color: "white", fontWeight: 600 }}
+                      >
+                        Cantidad
+                      </TableCell>
+                      <TableCell
+                        align="right"
+                        sx={{ color: "white", fontWeight: 600 }}
+                      >
+                        Subtotal
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {selectedSale.items?.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{getProductName(item.productId)}</TableCell>
-                        <TableCell align="right">
-                          ${item.unitPrice.toFixed(2)}
+                      <TableRow
+                        key={idx}
+                        sx={{
+                          "&:hover": { backgroundColor: "action.hover" },
+                          backgroundColor:
+                            idx % 2 === 0 ? "background.paper" : "action.hover",
+                        }}
+                      >
+                        <TableCell>
+                          <Typography variant="body2" fontWeight={500}>
+                            {item.productName || getProductName(item.productId)}
+                          </Typography>
                         </TableCell>
-                        <TableCell align="right">{item.quantity}</TableCell>
                         <TableCell align="right">
-                          ${(item.unitPrice * item.quantity).toFixed(2)}
+                          <Typography variant="body2">
+                            ${item.unitPrice.toLocaleString()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            sx={{
+                              backgroundColor: "primary.lighter",
+                              color: "primary.main",
+                              px: 2,
+                              py: 0.5,
+                              borderRadius: 1,
+                              display: "inline-block",
+                            }}
+                          >
+                            {item.quantity}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            color="success.main"
+                          >
+                            ${(item.unitPrice * item.quantity).toLocaleString()}
+                          </Typography>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -531,18 +923,51 @@ const loadSales = async () => {
                 </Table>
               </TableContainer>
 
-              <Box sx={{ mt: 2, pt: 2, borderTop: "1px solid #ddd" }}>
-                <Typography variant="h6">
-                  Total: ${selectedSale.total.toFixed(2)}
+              <Card
+                sx={{
+                  p: 3,
+                  backgroundColor: "success.lighter",
+                  borderRadius: 2,
+                  textAlign: "right",
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  fontWeight={600}
+                  gutterBottom
+                >
+                  TOTAL DE LA VENTA
                 </Typography>
-              </Box>
+                <Typography variant="h4" fontWeight={700} color="success.main">
+                  ${calculateTotal(selectedSale.items).toLocaleString()}
+                </Typography>
+              </Card>
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDetail}>Cerrar</Button>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={handleCloseDetail}
+            variant="contained"
+            sx={{ textTransform: "none", fontWeight: 600, px: 4 }}
+          >
+            Cerrar
+          </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={openConfirmDelete}
+        title="Eliminar Venta"
+        message="¿Estás seguro de que deseas eliminar esta venta? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        confirmColor="error"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        loading={loading}
+      />
     </DashboardLayout>
   );
 }
