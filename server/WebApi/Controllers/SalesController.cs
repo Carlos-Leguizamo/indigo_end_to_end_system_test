@@ -28,6 +28,7 @@ namespace WebApi.Controllers
                 Id = s.Id,
                 Date = s.Date,
                 Total = s.Total,
+                SaleStatusId = s.SaleStatusId, 
                 Client = new ClientResponseDto
                 {
                     Id = s.Client.Id,
@@ -54,7 +55,7 @@ namespace WebApi.Controllers
             {
                 Date = DateTime.UtcNow,
                 ClientId = dto.ClientId,
-                SaleStatusId = 1,
+                SaleStatusId = dto.SaleStatusId,
                 Items = dto.Items.Select(i => new SaleDetail
                 {
                     ProductId = i.ProductId,
@@ -71,6 +72,7 @@ namespace WebApi.Controllers
                 Id = fullSale.Id,
                 Date = fullSale.Date,
                 Total = fullSale.Total,
+                SaleStatusId = fullSale.SaleStatusId, 
                 Client = new ClientResponseDto
                 {
                     Id = fullSale.Client.Id,
@@ -101,6 +103,7 @@ namespace WebApi.Controllers
                 Id = s.Id,
                 Date = s.Date,
                 Total = s.Total,
+                SaleStatusId = s.SaleStatusId, 
                 Client = new ClientResponseDto
                 {
                     Id = s.Client.Id,
@@ -132,6 +135,7 @@ namespace WebApi.Controllers
                 Id = sale.Id,
                 Date = sale.Date,
                 Total = sale.Total,
+                SaleStatusId = sale.SaleStatusId, 
                 Client = new ClientResponseDto
                 {
                     Id = sale.Client.Id,
@@ -175,6 +179,7 @@ namespace WebApi.Controllers
                 Id = fullSale.Id,
                 Date = fullSale.Date,
                 Total = fullSale.Total,
+                SaleStatusId = fullSale.SaleStatusId, 
                 Client = new ClientResponseDto
                 {
                     Id = fullSale.Client.Id,
