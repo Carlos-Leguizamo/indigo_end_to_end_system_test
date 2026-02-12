@@ -22,5 +22,21 @@ namespace Application.Services
         {
             return _repo.GetByDateRangeAsync(from, to);
         }
+
+        public async Task<Sale?> GetSaleByIdAsync(int id)
+        {
+            return await _repo.GetByIdAsync(id);
+        }
+
+        public async Task<Sale> UpdateSaleAsync(Sale sale)
+        {
+            sale.Total = sale.Items.Sum(i => i.Price * i.Quantity);
+            return await _repo.UpdateAsync(sale);
+        }
+
+        public async Task<bool> DeleteSaleAsync(int id)
+        {
+            return await _repo.DeleteAsync(id);
+        }
     }
 }

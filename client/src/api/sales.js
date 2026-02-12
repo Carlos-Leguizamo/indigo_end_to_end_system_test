@@ -15,3 +15,24 @@ export const createSale = async (saleData, token) => {
   });
   return res.data;
 };
+
+export const deleteSale = async (id, token) => {
+  const res = await axios.delete(`${API_URL}/sales/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}
+
+export const getSaleById = async (id, token) => {
+  const res = await axios.get(`${API_URL}/sales/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}
+
+export const updateSale = async (id, saleData, token) => {
+  const res = await axios.put(`${API_URL}/sales/${id}`, saleData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}

@@ -74,5 +74,72 @@ namespace WebApi.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var sale = await _service.GetSaleByIdAsync(id);
+            if (sale == null)
+                return NotFound();
+
+            var response = new SaleResponseDto
+            {
+                Id = sale.Id,
+                Date = sale.Date,
+                Total = sale.Total,
+                Items = sale.Items.Select(i => new SaleItemResponseDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.Product.Name,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.Product.Price
+                }).ToList()
+            };
+
+            return Ok(response);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateSaleDto dto)
+        {
+            var sale = await _service.GetSaleByIdAsync(id);
+            if (sale == null)
+                return NotFound();
+
+            sale.ClientId = dto.ClientId;
+            sale.SaleStatusId = dto.SaleStatusId;
+            sale.Items = dto.Items.Select(i => new SaleDetail
+            {
+                ProductId = i.ProductId,
+                Quantity = i.Quantity
+            }).ToList();
+
+            var updated = await _service.UpdateSaleAsync(sale);
+            var response = new SaleResponseDto
+            {
+                Id = updated.Id,
+                Date = updated.Date,
+                Total = updated.Total,
+                Items = updated.Items.Select(i => new SaleItemResponseDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.Product.Name,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.Product.Price
+                }).ToList()
+            };
+
+            return Ok(response);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var deleted = await _service.DeleteSaleAsync(id);
+            if (!deleted)
+                return NotFound();
+
+            return NoContent();
+        }
     }
 }

@@ -36,5 +36,32 @@ namespace Infrastructure.Repositories
                 .Include(s => s.Client)
                 .Where(s => s.Date >= from && s.Date <= to)
                 .ToListAsync();
+
+
+        public async Task<Sale?> GetByIdAsync(int id) =>
+            await _context.Sales
+                .Include(s => s.Items)
+                .ThenInclude(i => i.Product)
+                .Include(s => s.Client)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+        public async Task<Sale> UpdateAsync(Sale sale)
+        {
+            _context.Sales.Update(sale);
+            await _context.SaveChangesAsync();
+            return sale;
+        }
+
+public async Task<bool> DeleteAsync(int id)
+{
+    var sale = await _context.Sales.FindAsync(id);
+    if (sale != null)
+    {
+        _context.Sales.Remove(sale);
+        await _context.SaveChangesAsync();
+        return true; // Se eliminó exitosamente
+    }
+    return false; // No se encontró la venta
+}
     }
 }
